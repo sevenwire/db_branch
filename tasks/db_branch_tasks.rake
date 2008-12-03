@@ -12,6 +12,10 @@ namespace :db do
         config[env]["database"].sub!(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch}")
       end
       File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
+      Rake::Task['environment'].invoke
+      Rake::Task['db:create:all'].invoke
+      Rake::Task['db:schema:load'].invoke
+      Rake::Task['db:test:prepare'].invoke
     end
   end
 end
