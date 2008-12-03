@@ -6,5 +6,5 @@ Rails plugin to play nice with git branching and databases. Loads branch-specifi
 Authors
 -------
 
-Nate Sutton (nate@sevenwire.com)
+Nate Sutton (nate@sevenwire.com)  
 Brandon Arbini (brandon@sevenwire.com)
