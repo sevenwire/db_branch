@@ -9,6 +9,7 @@ namespace :db do
     task :create => :environment do
       config = YAML.load_file("#{Rails.root}/config/database.yml")
       config.keys.each do |env|
+        next unless config[env]["database"]
         config[env]["database"].sub!(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch}")
       end
       File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
