@@ -10,6 +10,8 @@ More information:
 Usage
 -----
 
+First, you should have your db backed up. Just saying.
+
 By default, it will run setup, config, and create_clone tasks so you'll end up with a running copy of your existing db for your branch
 
     rake db:branch
