@@ -17,7 +17,7 @@ Next, from a branch, you'll create your new branch-specific database.
 
     rake db:branch:create
 
-This will create a new YAML file in config called `database.branch.[branch_name].yml`, change the database names to `[application or db name if unable to infer env]_[environment]_[branch]`, create all databases, load the schema, and prepare the test database.
+This will create a new YAML file in config called `database.branch.[branch_name].yml`, change the database names to `[application]_[environment]_[branch]` or `[databasename]_[branch]` if they are not named using a `[application]_[environment]` convention, create all databases, load the schema, and prepare the test database.
 
 Optionally, clone an existing db
 
