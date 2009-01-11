@@ -23,10 +23,19 @@ Optionally, clone an existing db
 
     rake db:branch:clone
 
-This will drop and recreate the current db, then load it from a mysqldump of the db from the original config file. Load different dbs by changing the RAILS_ENV variable.
+This will drop and recreate the current db, then load it from a mysqldump of the db from the original config file. Load different dbs by changing the RAILS\_ENV variable.
 
     rake db:branch:clone RAILS_ENV=development
 
+To remove all the branch databases and config
+
+    rake db:branch:purge
+
+
+Eleven?
+=======
+The only thing I can imagine making this any better is possibly finding a way of using gits hooks to automatically run rake db:branch:create when creating a new branch and rake db:branch:purge when deleting a branch.
+That'd be pretty hot. 
 
 Authors
 -------

@@ -13,7 +13,7 @@ namespace :db do
     end
 
     desc "Create the branch-specific database file and init db"
-    task :create => :environment do
+    task :create => [:environment,:setup] do
       config = YAML.load_file("#{Rails.root}/config/database.yml")
       config.delete_if { |k,v| v["database"].nil? }
       config.keys.each do |env|
@@ -48,6 +48,17 @@ namespace :db do
         end
       else
         puts "Don't know how to dump and load using #{original_config['adapter']}, how about adding support for it?"
+      end
+    end
+
+    desc "Drops the branch databases and removes the branch config file"
+    task :purge => :environment do
+      if Rails.configuration.database_configuration_file == Sevenwire::DbBranch.database_file_for_branch
+        Rake::Task['db:drop:all'].invoke
+        File.unlink Sevenwire::DbBranch.database_file_for_branch
+        puts "Dropped branch databases and removed branch config file"
+      else
+        puts "Aborted! You are not using a branched db?"
       end
     end
 
