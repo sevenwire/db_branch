@@ -4,8 +4,8 @@ DB\_BRANCH
 Rails plugin to play nice with git branching and databases. Loads a branch-specific database YAML file allowing you to migrate in branches without affecting the database of other branches.
 
 More information:  
-http://sevenwire.com/blog/2008/12/03/introducing-db-branch.html
-http://cryingwhilecoding.com/2009/1/11/easily-manage-db-changes-between-branches-in-git
+* http://sevenwire.com/blog/2008/12/03/introducing-db-branch.html
+* http://cryingwhilecoding.com/2009/1/11/easily-manage-db-changes-between-branches-in-git
 
 Usage
 -----
@@ -45,3 +45,5 @@ Authors
 Nate Sutton (nate@sevenwire.com)  
 Brandon Arbini (brandon@sevenwire.com)
 Mike Vincent (mike@cryingwhilecoding.com)
+
+
