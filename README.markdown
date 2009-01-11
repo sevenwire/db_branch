@@ -5,37 +5,39 @@ Rails plugin to play nice with git branching and databases. Loads a branch-speci
 
 More information:  
 http://sevenwire.com/blog/2008/12/03/introducing-db-branch.html
+http://cryingwhilecoding.com/2009/1/11/easily-manage-db-changes-between-branches-in-git
 
 Usage
 -----
 
-First, you'll want to run setup which currently adds `config/database.branch.*` to `.gitignore`.
+By default, it will run setup, config, and create_clone tasks so you'll end up with a running copy of your existing db for your branch
 
-    rake db:branch:setup
+    rake db:branch
 
-Next, from a branch, you'll create your new branch-specific database.
-
-    rake db:branch:create
-
-This will create a new YAML file in config called `database.branch.[branch_name].yml`, change the database names to `[application]_[environment]_[branch]` or `[databasename]_[branch]` if they are not named using a `[application]_[environment]` convention, create all databases, load the schema, and prepare the test database.
-
-Optionally, clone an existing db
+Update the db again? The clone task will drop and recreate the db and reload it from the original 
 
     rake db:branch:clone
 
-This will drop and recreate the current db, then load it from a mysqldump of the db from the original config file. Load different dbs by changing the RAILS\_ENV variable.
+Just want a clean db without the data? create_empty will create the config and just load the db from the schema
 
-    rake db:branch:clone RAILS_ENV=development
+    rake db:branch:create_empty
 
-To remove all the branch databases and config
+No longer need the branched db? purge will remove the branched databases and config
 
     rake db:branch:purge
 
 
-Eleven?
-=======
-The only thing I can imagine making this any better is possibly finding a way of using gits hooks to automatically run rake db:branch:create when creating a new branch and rake db:branch:purge when deleting a branch.
-That'd be pretty hot. 
+Branch database config files are named `database.branch.[branch_name].yml`. The database names for the branch are renamed as `[application]_[environment]_[branch]` or `[databasename]_[branch]` if the originals where not named using a `[application]_[environment]` convention.
+
+You can alter which database is used for the cloning or schema loading by setting the RAILS\_ENV variable
+
+    rake db:branch:clone RAILS_ENV=development
+
+
+But can it go to Eleven?
+------------------------
+The only thing I can imagine making this any better is possibly finding a way of using gits hooks to automatically run rake db:branch when creating a new branch and rake db:branch:purge when deleting a branch.
+That'd be pretty hot.
 
 Authors
 -------

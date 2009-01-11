@@ -1,4 +1,6 @@
 namespace :db do
+  task :branch => "branch:create_clone"
+
   namespace :branch do
     desc "Append config/database.branch.* to .gitignore if missing"
     task :setup => :environment do
@@ -12,42 +14,64 @@ namespace :db do
       end
     end
 
-    desc "Create the branch-specific database file and init db"
-    task :create => [:environment,:setup] do
-      config = YAML.load_file("#{Rails.root}/config/database.yml")
-      config.delete_if { |k,v| v["database"].nil? }
-      config.keys.each do |env|
-        name = config[env]["database"]
-        config[env]["database"] = name =~ /#{env}/ ? name.sub(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch}") : "#{name}_#{Sevenwire::DbBranch.branch}"
+    desc "Creates a new database config for branch" 
+    task :config => [:environment,:setup] do
+      if !Sevenwire::DbBranch.database_file_for_branch?
+        config = YAML.load_file("#{Rails.root}/config/database.yml")
+        config.delete_if { |k,v| v["database"].nil? }
+        config.keys.each do |env|
+          name = config[env]["database"]
+          config[env]["database"] = name =~ /#{env}/ ? name.sub(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch}") : "#{name}_#{Sevenwire::DbBranch.branch}"
+        end
+        File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
+      else
+        puts "#{Sevenwire::DbBranch.database_file_for_branch} already exists"
       end
-      File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
+      # ensure we're using the new branch config
+      Sevenwire::DbBranch.load_database
+    end
+
+    desc "Create empty database by loading the schema and preparing the test db"
+    task :create_empty => [:environment,:setup, :config] do
       Rake::Task['environment'].invoke
+      if Rails.configuration.database_configuration_file == Sevenwire::DbBranch.database_file_for_branch
+        Rake::Task['db:create:all'].invoke
+        Rake::Task['db:schema:load'].invoke
+        Rake::Task['db:test:prepare'].invoke
+        puts "Unless we ran into any errors, the branch databases have all been created."
+        puts "The schema has been loaded into the #{Rails.env} env branch db, and test db prepared."
+      else
+        puts "Aborted! Not using branch config! Run rake:db:branch:config to create it."
+      end
+    end
+
+    desc "Create cloned database by loading branch from a dump of current db and preparing test db"
+    task :create_clone => [:environment,:setup, :config] do
       Rake::Task['db:create:all'].invoke
-      Rake::Task['db:schema:load'].invoke
-      Rake::Task['db:test:prepare'].invoke
-      puts "Unless we ran into any errors, the branch databases (#{config.map {|k,v| v['database']}.to_sentence}) have all been created."
-      puts "The schema has been loaded into the #{Rails.env} env db, #{config[Rails.env]['database']} and test db prepared. Use rake db:branch:clone if you wish to load the data"
+      Rake::Task['db:branch:clone'].invoke 
+      Rake::Task['db:test:prepare'].invoke 
+      puts "Unless we ran into any errors, the branch databases have all been created."
+      puts "The data from the original db has been loaded into the #{Rails.env} env branch db and test db prepared."
     end
 
     desc "Clone database from original database.yml, set RAILS_ENV to switch dbs"
     task :clone => :environment do
-      original_config = YAML.load_file("#{Rails.root}/config/database.yml")[Rails.env]
-      branch_config = YAML.load_file(Sevenwire::DbBranch.database_file_for_branch)[Rails.env]
-      case original_config['adapter']
-      when 'mysql'
-        if Rails.configuration.database_configuration_file == Sevenwire::DbBranch.database_file_for_branch
-          Rake::Task['db:drop'].invoke
-          Rake::Task['db:create'].invoke
-          cli = "mysqldump #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
-          #puts "executing: #{cli}"
-          `#{cli}`
-          Rake::Task['db:test:prepare'].invoke
-          puts "Data loaded from #{original['database']} into #{branch_config['database']} and test db prepared"
+      if Rails.configuration.database_configuration_file == Sevenwire::DbBranch.database_file_for_branch
+        original_config = YAML.load_file("#{Rails.root}/config/database.yml")[Rails.env]
+        branch_config = YAML.load_file(Sevenwire::DbBranch.database_file_for_branch)[Rails.env]
+        case original_config['adapter']
+        when 'mysql'
+            Rake::Task['db:drop'].invoke
+            Rake::Task['db:create'].invoke
+            cli = "mysqldump #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
+            #puts "executing: #{cli}"
+            `#{cli}`
+            puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
         else
-          puts "Setup and Create your branch config first!"
+          puts "Don't know how to dump and load using #{original_config['adapter']}, how about adding support for it?"
         end
       else
-        puts "Don't know how to dump and load using #{original_config['adapter']}, how about adding support for it?"
+        puts "Aborted! Not using branched database config! Run rake:db:branch:config to create it."
       end
     end
 
