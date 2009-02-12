@@ -1,6 +1,11 @@
 namespace :db do
   task :branch => "branch:create_clone"
 
+  # Chain onto the default load_config task
+  task :load_config => :rails_env do
+    Sevenwire::DbBranch.load_database
+  end
+
   namespace :branch do
     desc "Append config/database.branch.* to .gitignore if missing"
     task :setup => :environment do
@@ -49,9 +54,8 @@ namespace :db do
     task :create_clone => [:environment,:setup, :config] do
       Rake::Task['db:create:all'].invoke
       Rake::Task['db:branch:clone'].invoke 
+      puts "\nPreparing the test db, if there are any pending migrations you'll need to run rake db:test:prepare after migrating."
       Rake::Task['db:test:prepare'].invoke 
-      puts "Unless we ran into any errors, the branch databases have all been created."
-      puts "The data from the original db has been loaded into the #{Rails.env} env branch db and test db prepared."
     end
 
     desc "Clone database from original database.yml, set RAILS_ENV to switch dbs"
@@ -78,7 +82,19 @@ namespace :db do
     desc "Drops the branch databases and removes the branch config file"
     task :purge => :environment do
       if Rails.configuration.database_configuration_file == Sevenwire::DbBranch.database_file_for_branch
-        Rake::Task['db:drop:all'].invoke
+        Sevenwire::DbBranch.load_database
+        #Rake::Task['db:drop:all'].invoke
+        ActiveRecord::Base.configurations.each_value do |config|
+          # Skip entries that don't have a database key
+          next unless config['database']
+          # Only connect to local databases
+          begin
+            puts "Attempting to drop #{config['database']}"
+            local_database?(config) { drop_database(config) }
+          rescue
+            puts "caught and ignored exception: #{$!}"
+          end
+        end
         File.unlink Sevenwire::DbBranch.database_file_for_branch
         puts "Dropped branch databases and removed branch config file"
       else
