@@ -1,3 +1,5 @@
+require "ftools"
+
 module Sevenwire
   class DbBranch
     def self.load_database

@@ -54,9 +54,9 @@ namespace :db do
     desc "Create cloned database by loading branch from a dump of current db and preparing test db"
     task :create_clone => [:environment,:setup, :config] do
       Rake::Task['db:create:all'].invoke
-      Rake::Task['db:branch:clone'].invoke 
+      Rake::Task['db:branch:clone'].invoke
       puts "\nPreparing the test db, if there are any pending migrations you'll need to run rake db:test:prepare after migrating."
-      Rake::Task['db:test:prepare'].invoke 
+      Rake::Task['db:test:prepare'].invoke
     end
 
     desc "Clone database from original database.yml, set RAILS_ENV to switch dbs"
@@ -66,12 +66,13 @@ namespace :db do
         branch_config = YAML.load_file(Sevenwire::DbBranch.database_file_for_branch)[Rails.env]
         case original_config['adapter']
         when 'mysql'
-            Rake::Task['db:drop'].invoke
-            Rake::Task['db:create'].invoke
-            cli = "mysqldump #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
-            #puts "executing: #{cli}"
-            `#{cli}`
-            puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
+          Rake::Task['db:drop'].invoke
+          Rake::Task['db:create'].invoke
+          cli = "mysqldump #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
+          `#{cli}`
+          puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
+        when 'sqlite3'
+          File::copy(original_config['database'], branch_config['database'], true)
         else
           puts "Don't know how to dump and load using #{original_config['adapter']}, how about adding support for it?"
         end
