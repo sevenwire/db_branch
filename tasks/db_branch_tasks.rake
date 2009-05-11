@@ -9,17 +9,18 @@ namespace :db do
   namespace :branch do
     desc "Append config/database.branch.* to .gitignore if missing"
     task :setup => :environment do
-      File.open("#{Rails.root}/.gitignore", "a+") do |f| 
+      File.open("#{Rails.root}/.gitignore", "a+") do |f|
+        f.rewind
         if f.grep(/config\/database\.branch\.\*/).any?
-          puts "ignore line found in .gitignore"
+          puts "Ignore line found in .gitignore"
         else
-          f.write("\nconfig/database.branch.*\n") unless 
+          f.puts "config/database.branch.*\n"
           puts "Appended ignore line to .gitignore"
         end
       end
     end
 
-    desc "Creates a new database config for branch" 
+    desc "Creates a new database config for branch"
     task :config => [:environment,:setup] do
       if !Sevenwire::DbBranch.database_file_for_branch?
         config = YAML.load_file("#{Rails.root}/config/database.yml")
