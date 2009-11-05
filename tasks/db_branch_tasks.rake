@@ -76,6 +76,9 @@ namespace :db do
             FileUtils.copy_file(original_config['database'], branch_config['database'])
             puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
           end
+        when 'postgresql'
+          copy_postgres_database(original_config, branch_config['database'])
+          puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
         else
           puts "Don't know how to dump and load using #{original_config['adapter']}, how about adding support for it?"
         end
@@ -113,6 +116,20 @@ namespace :db do
       params << " --password=#{config['password']}" unless config['password'].blank?
       params << " #{config['database']}"
       params
+    end
+    
+    def copy_postgres_database(config, branch_database)
+      # TODO: use .pgpass file to authenticate?
+      auth_data = "-U #{config['username']}"
+      auth_data << " -h #{config['host']}" if config['host']
+      auth_data << " -p #{config['port']}" if config['port']
+      
+      dump_flags = "-F c -b"
+      
+      cmd = "export PGPASSWORD=#{config['password']};"
+      cmd << "pg_dump #{auth_data} #{dump_flags} #{config['database']} | pg_restore #{auth_data} -d #{branch_database}"
+      cmd << "; unset PGPASSWORD"
+      `#{cmd}`
     end
   end
 end
