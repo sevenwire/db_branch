@@ -9,12 +9,11 @@ namespace :db do
   namespace :branch do
     desc "Append config/database.branch.* to .gitignore if missing"
     task :setup => :environment do
-      File.open("#{Rails.root}/.gitignore", "a+") do |f|
-        f.rewind
-        if f.grep(/config\/database\.branch\.\*/).any?
-          puts "Ignore line found in .gitignore"
+      File.open("#{Rails.root}/.gitignore", "r+") do |f|
+        if f.grep(/config\/database\.branch\.\*/).any? # advances seek to end of file
+          puts "Found ignore line in .gitignore"
         else
-          f.puts "config/database.branch.*\n"
+          f.puts "config/database.branch.*"
           puts "Appended ignore line to .gitignore"
         end
       end
