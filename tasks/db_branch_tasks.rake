@@ -27,7 +27,7 @@ namespace :db do
         config.delete_if { |k,v| v["database"].nil? }
         config.keys.each do |env|
           name = config[env]["database"]
-          config[env]["database"] = name =~ /#{env}/ ? name.sub(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch}") : "#{name}_#{Sevenwire::DbBranch.branch}"
+          config[env]["database"] = name =~ /#{env}/ ? name.sub(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch(:db)}") : "#{name}_#{Sevenwire::DbBranch.branch(:db)}"
         end
         File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
       else

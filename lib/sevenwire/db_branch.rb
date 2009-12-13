@@ -11,7 +11,7 @@ module Sevenwire
     end
 
     def self.database_file_for_branch
-      "#{Rails.root}/config/database.branch.#{branch}.yml"
+      "#{Rails.root}/config/database.branch.#{branch(:fs)}.yml"
     end
 
     def self.database_file_for_branch?
@@ -22,8 +22,17 @@ module Sevenwire
       !branch.blank?
     end
 
-    def self.branch
-      git? && git_repository? && `git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \\(.*\\)/\\1/'`.chomp
+    def self.branch(sanitize_for=nil)
+      return false unless git? && git_repository?
+      
+      branch = `git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \\(.*\\)/\\1/'`.chomp
+      
+      case sanitize_for
+      when :db then branch.gsub!('/', '_')
+      when :fs then branch.gsub!('/', '.')
+      end
+      
+      branch
     end
 
     def self.git?

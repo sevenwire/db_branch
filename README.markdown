@@ -62,3 +62,4 @@ Authors
 * Brandon Arbini (brandon@sevenwire.com)
 * Mike Vincent (mike@cryingwhilecoding.com)
 * Bjørn Arild Mæland (bjorn.maeland@gmail.com)
+* Chris Griego (cgriego@gmail.com)
