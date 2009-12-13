@@ -25,7 +25,7 @@ module Sevenwire
     def self.branch(sanitize_for=nil)
       return false unless git? && git_repository?
       
-      branch = `git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \\(.*\\)/\\1/'`.chomp
+      branch = ENV['DB_BRANCH'] || `git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \\(.*\\)/\\1/'`.chomp
       
       case sanitize_for
       when :db then branch.gsub!('/', '_')

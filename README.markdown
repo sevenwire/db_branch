@@ -42,6 +42,11 @@ database names for the branch are renamed as
 `[application]_[environment]_[branch]` or `[databasename]_[branch]` if the
 originals where not named using a `[application]_[environment]` convention.
 
+You can alter which branch name is used for the creation or purging of databases
+and config by setting the `DB\_BRANCH` variable.
+
+    rake db:branch DB_BRANCH=refactor
+
 You can alter which database is used for the cloning or schema loading by
 setting the `RAILS\_ENV` variable.
 
