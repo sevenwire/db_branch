@@ -53,6 +53,22 @@ setting the `RAILS\_ENV` variable.
     rake db:branch:clone RAILS_ENV=development
 
 
+Explicitly configuring which environments to branch
+---------------------------------------------------
+I have a project that has a lot of tunneled connections defined in it's
+config/database.yml. I do not want the plugin to attempt to create branched
+versions of all these dbs, so I added support for explicitly stating which
+environments should have the db branched by adding a branch: true or false to
+the database.yml where appropriate. So, if you just want production and
+development dbs to be branched, you can set branch: true to those stanzas of the
+config and the rest will be included in the new config unmanipulated. 
+
+Once 'branch' has been defined in any stanza, any stanza lacking it or having it
+set to something that does not evaluate to true will be treated as a remote db,
+effectively omitting it from the create/drop tasks.
+
+
+
 But can it go to Eleven?
 ------------------------
 The only thing I can imagine making this any better is possibly finding a way of

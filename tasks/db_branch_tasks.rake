@@ -1,4 +1,24 @@
 namespace :db do
+  def explicit_branches?
+    @all_db_configs ||= YAML.load_file("#{Rails.root}/config/database.yml")
+    @all_db_configs.any? {|env,config| config.keys.include?('branch') }
+  end
+
+  # Override local_database? method to only yield 
+  # if configured to branch, useful if you have tunneled connections or something
+  # you want to prevent branching of
+  def local_database?(config, &block)
+    if %w( 127.0.0.1 localhost ).include?(config['host']) || config['host'].blank?
+      if !explicit_branches? || config['branch']
+        yield
+      else
+        puts "Not configured to branch #{config['database']}, skipping."
+      end
+    else
+      puts "This task only modifies local databases. #{config['database']} is on a remote host."
+    end
+  end
+
   task :branch => "branch:create_clone"
 
   # Chain onto the default load_config task
@@ -25,10 +45,16 @@ namespace :db do
         config = YAML.load_file("#{Rails.root}/config/database.yml")
         config.delete_if { |k,v| v["database"].nil? }
         config.keys.each do |env|
+          next unless config[env]['branch'] if explicit_branches?
           name = config[env]["database"]
           config[env]["database"] = name =~ /#{env}/ ? name.sub(/#{env}/, "#{env}_#{Sevenwire::DbBranch.branch(:db)}") : "#{name}_#{Sevenwire::DbBranch.branch(:db)}"
         end
-        File.open(Sevenwire::DbBranch.database_file_for_branch, "w") {|f| f.write(YAML.dump(config)) }
+        File.open(Sevenwire::DbBranch.database_file_for_branch, "w") do |f| 
+          f.puts "# Branched database configuration for #{Sevenwire::DbBranch.branch} branch of development" 
+          f.puts "# rake db:branch:purge will drop the branched databases and remove this config file"
+          f.puts(YAML.dump(config)) 
+        end
+        puts "Wrote new config for branched db: #{Sevenwire::DbBranch.database_file_for_branch}"
       else
         puts "#{Sevenwire::DbBranch.database_file_for_branch} already exists"
       end
@@ -119,6 +145,10 @@ namespace :db do
     
     def copy_postgres_database(config, branch_database)
       # TODO: use .pgpass file to authenticate?
+      #
+      # TODO: another approach to creating a pg copy might be to 
+      #       dropdb target_db; createdb -T target_db
+      #
       auth_data = "-U #{config['username']}"
       auth_data << " -h #{config['host']}" if config['host']
       auth_data << " -p #{config['port']}" if config['port']
