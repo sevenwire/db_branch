@@ -28,11 +28,10 @@ module Sevenwire
       branch = ENV['DB_BRANCH'] || `git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \\(.*\\)/\\1/'`.chomp
       
       case sanitize_for
-      when :db then branch.gsub!('/', '_')
-      when :fs then branch.gsub!('/', '.')
+      when :db then branch.gsub('/', '_')
+      when :fs then branch.gsub('/', '.')
+      else branch.dup # ENV returns frozen strings
       end
-      
-      branch
     end
 
     def self.git?
