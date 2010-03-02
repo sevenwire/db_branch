@@ -93,7 +93,7 @@ namespace :db do
         when 'mysql'
           Rake::Task['db:drop'].invoke
           Rake::Task['db:create'].invoke
-          cli = "mysqldump #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
+          cli = "mysqldump --routines #{mysql_params(original_config)} | mysql #{mysql_params(branch_config)}"
           `#{cli}`
           puts "Data loaded from #{original_config['database']} into #{branch_config['database']}"
         when 'sqlite3'
