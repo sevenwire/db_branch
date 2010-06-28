@@ -22,7 +22,8 @@ namespace :db do
   task :branch => "branch:create_clone"
 
   # Chain onto the default load_config task
-  task :load_config => [:environment,:rails_env] do
+  task :load_config => :rails_env do
+    require File.expand_path(File.join('..', 'lib', 'sevenwire', 'db_branch'), File.dirname(__FILE__))
     Sevenwire::DbBranch.load_database
   end
 
